@@ -1,0 +1,142 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script>
+    var myApp = angular.module('NaviaApp', ['ngDialog']);
+    myApp.controller('ThesisController', function ($scope, $http,$rootScope, ngDialog) {
+        $scope.theses = [];
+        $http.get('/api/thesispromo/@Microsoft.AspNet.Identity.IdentityExtensions.GetUserId(HttpContext.Current.User.Identity).ToString()').success(function (data, status) {
+            $scope.theses = data;
+        });
+
+        $scope.editPopUp = function (thesisid) {
+            $rootScope.currentid = thesisid;
+            $http.get('/api/thesis/' + $rootScope.currentid).success(function (data, status) {
+                $rootScope.singlethesis = data;
+                $rootScope.types = [{ name: 'Inżynierska', value: 0 }, { name: 'Magisterska', value: 1 }, { name: 'Doktorska', value: 2 }];
+                if (data.Type == 0) {
+                    $rootScope.type = $scope.types[0];
+                }
+                else if (data.Type == 1) {
+                    $rootScope.type = $scope.types[1];
+                }
+                else if (data.Type == 2) {
+                    $rootScope.type = $scope.types[2];
+                }
+                $rootScope.statuses = [{ name: 'Otwarty', value: 0 }, { name: 'Archiwalny', value: 1 }, { name: 'Przypisany', value: 2 }, { name: 'Zablokowany', value: 3 }];
+                if (data.Status == 0) {
+                    $rootScope.status = $scope.statuses[0];
+                }
+                else if (data.Status == 1) {
+                    $rootScope.status = $scope.statuses[1];
+                }
+                else if (data.Status == 2) {
+                    $rootScope.status = $scope.statuses[2];
+                }
+                else if (data.Status == 3) {
+                    $rootScope.status = $scope.statuses[3];
+                }
+                $http.get('/api/userroles/19c1a7ba-24c8-4216-83fd-21215045721c').success(function (data, status) {
+                    $rootScope.students = data;
+                    $http.get('/api/user/' + $rootScope.singlethesis.Student.Id).success(function (data, status) {
+                        $rootScope.student = data;
+                    });
+                });
+                $http.get('/api/subject').success(function (data, status) {
+                    $rootScope.subjects = data;
+                    $http.get('/api/subject/' + $rootScope.singlethesis.Subject.SubjectId).success(function (data, status) {
+                        $rootScope.subject = data;
+                    });
+                });
+                ngDialog.open({
+                    template: 'DialogId',
+                    controller: 'ThesisController',
+                    className: 'ngdialog-theme-default',
+                    data: $rootScope.singlethesis
+                });
+            });
+        }
+
+
+    });
+</script>
+
+<script type="text/ng-template" id="DialogId">
+    <form role="form">
+     <div class="form-group">
+        <label for="type">Temat</label>
+        <a id="subject" class="form-control">{{ngDialogData.Subject.Title}}</a>
+    </div>
+    <div class="form-group">
+        <label for="type">Typ pracy</label>
+        <select id="type" class="form-control" ng-model="type" ng-options="i.name for i in types track by i.value"></select>
+    </div>
+    <div class="form-group">
+        <label for="type">Status pracy</label>
+        <select id="status2" class="form-control" ng-model="status" ng-options="i.name for i in statuses track by i.value"></select>
+    </div>
+        <div class="form-group">
+            <label for="description">Opis: </label>
+            <input class="form-control input-sm" value="{{ngDialogData.Subject.Description}}" id="description"></input>
+        </div>
+        <div class="form-group">
+            <label for="subject">Tagi: <small>Słowa kluczowe oddzielone przecinkiem</small></label>
+            <input class="form-control input-sm" value="{{ngDialogData.Subject.Tags}}" id="subject"></input>
+        </div>
+    </form>
+    <div>
+        <h4>Student realizujący pracę</h4>
+        <table class="table">
+            <tbody>
+                <tr>
+                        <div class="form-group">        <select id="student" class="form-control inline" ng-model="student" ng-options="+ i.Name + ' ' + i.LastName for i in students track by i.Id"></select> <button type="submit" class="btn btn-xs btn-danger">Odrzuć</button>
+    </div>
+                        </td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-success btn-sm">Zapisz</button>
+    </div>
+</script>
+
+<body ng-app="NaviaApp">
+    <div class="container" ng-controller="ThesisController">
+
+        <div class="row clearfix">
+
+            <div class="col-md-8 column">
+                <form role="form" class="form-inline"></form>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                #
+                            </th>
+                            <th>
+                                Tytuł
+                            </th>
+                            <th>
+                                Student
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody ng-repeat="thesis in theses track by $index">
+                        <tr ng-if="thesis.Student == null">
+                            <td>{{$index+1}}</td>
+                            <td><a href="" ng-click="editPopUp(thesis.ThesisId)">{{thesis.Subject.TitlePL}}</a></td>
+                            <td>{{thesis.Student.Name + ' ' + thesis.Student.LastName}}</td>
+                        </tr>
+                        <tr ng-if="thesis.Student != null" class="active">
+                            <td>{{$index+1}}</td>
+                            <td>
+                                <a href="" ng-click="editPopUp(thesis.ThesisId)">{{thesis.Subject.TitlePL}}</a>
+                            </td>
+                            <td>{{thesis.Student.Name + ' ' + thesis.Student.LastName}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>

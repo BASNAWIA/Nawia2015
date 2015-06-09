@@ -1,0 +1,182 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script>
+    var myApp = angular.module('NaviaApp', ['ngDialog']);
+    myApp.controller('ThesisController', function ($scope, $http, $rootScope, ngDialog) {
+        $scope.theses = [];
+        $http.get('/api/thesis').success(function (data, status) {
+            $scope.theses = data;
+        });
+
+        $scope.passId = function (thesisid) {
+            $rootScope.currentid = thesisid;
+        }
+
+        $scope.deleteThesis = function () {
+            $http.delete('/api/thesis/' + $rootScope.currentid).success(function (data, status, headers, config) {
+            }).error(function (data, status, headers, config) {
+                alert('Cos poszło nie tak');
+            }).success(function (data, status) {
+                window.location.reload();
+            });
+        }
+
+        $scope.editPopUp = function (thesisid) {
+            $rootScope.currentid = thesisid;
+            $http.get('/api/thesis/' + $rootScope.currentid).success(function (data, status) {
+                $rootScope.singlethesis = data;
+                $rootScope.types = [{ name: 'Inżynierska', value: 0 }, { name: 'Magisterska', value: 1 }, { name: 'Doktorska', value: 2 }];
+                if (data.Type == 0) {
+                    $rootScope.type = $scope.types[0];
+                }
+                else if (data.Type == 1) {
+                    $rootScope.type = $scope.types[1];
+                }
+                else if (data.Type == 2) {
+                    $rootScope.type = $scope.types[2];
+                }
+                $rootScope.statuses = [{ name: 'Otwarty', value: 0 }, { name: 'Archiwalny', value: 1 }, { name: 'Przypisany', value: 2 }, { name: 'Zablokowany', value: 3 }];
+                if (data.Status == 0) {
+                    $rootScope.status = $scope.statuses[0];
+                }
+                else if (data.Status == 1) {
+                    $rootScope.status = $scope.statuses[1];
+                }
+                else if (data.Status == 2) {
+                    $rootScope.status = $scope.statuses[2];
+                }
+                else if (data.Status == 3) {
+                    $rootScope.status = $scope.statuses[3];
+                }
+                $http.get('/api/userroles/79fefe72-01b8-4dbc-8075-34e605c56136').success(function (data, status) {
+                    $rootScope.promotors = data;
+                    $http.get('/api/user/' + $rootScope.singlethesis.Supervisor.Id).success(function (data, status) {
+                        $rootScope.promotor = data;
+                    });
+                });
+                $http.get('/api/userroles/19c1a7ba-24c8-4216-83fd-21215045721c').success(function (data, status) {
+                    $rootScope.students = data;
+                    $http.get('/api/user/' + $rootScope.singlethesis.Student.Id).success(function (data, status) {
+                        $rootScope.student = data;
+                    });
+                });
+                $http.get('/api/subject').success(function (data, status) {
+                    $rootScope.subjects = data;
+                    $http.get('/api/subject/' + $rootScope.singlethesis.Subject.SubjectId).success(function (data, status) {
+                        $rootScope.subject = data;
+                    });
+                });
+                $http.get('/api/stage').success(function (data, status) {
+                    $rootScope.stages = data;
+                    $http.get('/api/stage/' + $rootScope.singlethesis.Stage.StageID).success(function (data, status) {
+                        $rootScope.stage = data;
+                    });
+                });
+                ngDialog.open({
+                    template: 'DialogEdit',
+                    controller: 'ThesisController',
+                    className: 'ngdialog-theme-default',
+                    data: $rootScope.singlestage
+                });
+            });
+        }
+
+        $scope.editThesis = function () {
+            $scope.editedthesis = JSON.stringify({ 'ThesisID': $rootScope.currentid, 'StageID': stage.value, 'SubjectID': subject.value, 'SupervisorID': promotor.value, 'StudentID': student.value, 'Status': status2.value, 'Type': type.value });
+            $http.put('/api/thesis', $scope.editedthesis).success(function (data, status, headers, config) {
+            }).error(function (data, status, headers, config) {
+                alert('Cos poszło nie tak');
+            }).success(function (data, status) {
+                window.location.reload();
+            });
+        }
+
+    });
+</script>
+
+<script type="text/ng-template" id="DialogEdit">
+    <div class="form-group">
+        <label for="type">Typ pracy</label>
+        <select id="type" class="form-control" ng-model="type" ng-options="i.name for i in types track by i.value"></select>
+    </div>
+    <div class="form-group">
+        <label for="type">Status pracy</label>
+        <select id="status2" class="form-control" ng-model="status" ng-options="i.name for i in statuses track by i.value"></select>
+    </div>
+    <div class="form-group">
+        <label for="type">Promotor</label>
+        <select id="promotor" class="form-control" ng-model="promotor" ng-options="i.Title + ' ' + i.Name + ' ' + i.LastName for i in promotors track by i.Id"></select>
+    </div>
+    <div class="form-group">
+        <label for="type">Student</label>
+        <select id="student" class="form-control" ng-model="student" ng-options="+ i.Name + ' ' + i.LastName for i in students track by i.Id"></select>
+    </div>
+    <div class="form-group">
+        <label for="type">Temat</label>
+        <select id="subject" class="form-control" ng-model="subject" ng-options="i.Title for i in subjects track by i.SubjectId"></select>
+    </div>
+    <div class="form-group">
+        <label for="type">Etap</label>
+        <select id="stage" class="form-control" ng-model="stage" ng-options="i.Name for i in stages track by i.StageID"></select>
+    </div>
+    <button type="submit" ng-click="editThesis()" class="btn btn-success">Edytuj</button>
+</script>
+
+<script type="text/ng-template" id="DialogDelete">
+    <p><b>Czy na pewno chcesz usunąć ten etap?</b></p>
+    <button type="submit" ng-click="deleteThesis()" class="btn btn-success">Tak</button>
+    <button type="reset" ng-click="closeThisDialog()" class="btn btn-danger">Nie</button>
+</script>
+
+<body ng-app="NaviaApp">
+    <div class="container" ng-controller="ThesisController">
+
+        <div class="row clearfix">
+
+            <div class="col-md-8 column">
+                <form role="form" class="form-inline"></form>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                #
+                            </th>
+                            <th>
+                                Tytuł
+                            </th>
+                            <th>
+                                Promotor
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody ng-repeat="thesis in theses track by $index">
+                        <tr ng-if="thesis.Student == null">
+                            <td>{{$index+1}}</td>
+                            <td><a href="" ng-click="editPopUp(thesis.ThesisId)">{{thesis.Subject.TitlePL}}</a></td>
+                            <td>{{thesis.Supervisor.Title + ' ' + thesis.Supervisor.Name + ' ' + thesis.Supervisor.LastName}}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-danger" ng-click="passId(thesis.ThesisId)" ng-dialog="DialogDelete" ng-dialog-controller="ThesisController" ng-dialog-class="ngdialog-theme-default">
+                                    Usuń temat
+                                </button>
+                            </td>
+                        </tr>
+                        <tr ng-if="thesis.Student != null" class="active">
+                            <td>{{$index+1}}</td>
+                            <td>
+                                <a href="" ng-click="editPopUp(thesis.ThesisId)">{{thesis.Subject.TitlePL}}</a>
+                            </td>
+                            <td>{{thesis.Supervisor.Title + ' ' + thesis.Supervisor.Name + ' ' + thesis.Supervisor.LastName}}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-danger" ng-click="passId(thesis.ThesisId)" ng-dialog="DialogDelete" ng-dialog-controller="ThesisController" ng-dialog-class="ngdialog-theme-default">
+                                    Usuń temat
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>

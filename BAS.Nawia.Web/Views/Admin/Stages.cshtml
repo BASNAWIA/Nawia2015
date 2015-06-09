@@ -1,0 +1,159 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script>
+    var myApp = angular.module('NaviaApp', ['ngDialog']);
+    myApp.controller('StagesController', function ($scope, $http, $rootScope, ngDialog) {
+        $scope.stages = [];
+        $http.get('/api/stage').success(function (data, status) {
+            $scope.stages = data;
+            $rootScope.stages = data;
+            });
+
+        $scope.createStage = function () {
+            $scope.createdstage = JSON.stringify({ 'Name': Name.value, 'DateStart': DataStart.value, 'DateEnd': DataEnd.value, 'Status': type.value});
+            $http.post('/api/stage', $scope.createdstage).success(function (data, status, headers, config) {
+            }).error(function (data, status, headers, config) {
+                alert('Cos poszło nie tak');
+            }).success(function (data, status) {
+                window.location.reload();
+            });
+        }
+
+        $scope.passId = function (stageid) {
+            $rootScope.currentid = stageid;
+        }
+
+        $scope.deleteStage = function () {
+            $http.delete('/api/stage/' + $rootScope.currentid).success(function (data, status, headers, config) {
+            }).error(function (data, status, headers, config) {
+                alert('Cos poszło nie tak');
+            }).success(function (data, status) {
+                window.location.reload();
+            });
+        }
+
+        $scope.editPopUp = function (stageid)
+        {
+            $rootScope.currentid = stageid;
+            $http.get('/api/stage/' + $rootScope.currentid).success(function (data, status) {
+                $rootScope.singlestage = data;
+                $rootScope.items = [{ name: 'Otwarty', value: 0 }, { name: 'Zamknięty', value: 1 }];
+                if (data.Status == 0)
+                {
+                    $rootScope.item = $scope.items[0];
+                }
+                else
+                {
+                    $rootScope.item = $scope.items[1];
+                }
+                ngDialog.open({
+                    template: 'DialogEdit',
+                    controller: 'StagesController',
+                    className: 'ngdialog-theme-default',
+                    data: $rootScope.singlestage
+            });
+            });
+        }
+
+        $scope.editStage = function () {
+            $scope.editedstage = JSON.stringify({ 'StageID': $rootScope.currentid, 'Name': Name2.value, 'DateStart': DataStart2.value, 'DateEnd': DataEnd2.value, 'Status': type2.value });
+            $http.put('/api/stage', $scope.editedstage).success(function (data, status, headers, config) {
+            }).error(function (data, status, headers, config) {
+                alert('Cos poszło nie tak');
+            }).success(function (data, status) {
+                window.location.reload();
+            });
+        }
+
+    });
+</script>
+
+<script type="text/ng-template" id="DialogDelete">
+    <p><b>Czy na pewno chcesz usunąć ten etap?</b></p>
+    <button type="submit" ng-click="deleteStage()" class="btn btn-success">Tak</button>
+    <button type="reset" ng-click="closeThisDialog()" class="btn btn-danger">Nie</button>
+</script>
+
+<script type="text/ng-template" id="DialogAdd">
+    <div class="form-group">
+        <label for="Name">Nazwa etapu</label><input class="form-control" value="" id="Name">
+    </div>
+    <div class="form-group">
+        <label for="DataStart">Data od</label><input type="date" class="form-control" id="DataStart">
+    </div>
+    <div class="form-group">
+        <label for="Name">Data do</label><input type="date" class="form-control" id="DataEnd">
+    </div>
+    <div class="form-group">
+        <label for="type">Status etapu</label>
+        <select id="type" class="form-control">
+            <option value="0">Otwarty</option>
+            <option value="1">Zamknięty</option>
+        </select>
+    </div>
+    <button type="submit" ng-click="createStage()" class="btn btn-success">Stwórz</button>
+</script>
+
+<script type="text/ng-template" id="DialogEdit">
+    <div class="form-group">
+        <label for="Name">Nazwa etapu</label><input class="form-control" id="Name2" value="{{ngDialogData.Name}}">
+    </div>
+    <div class="form-group">
+        <label for="DataStart">Data od</label><input type="date" class="form-control" id="DataStart2" value="{{ngDialogData.DateStart}}">
+    </div>
+    <div class="form-group">
+        <label for="Name">Data do</label><input type="date" class="form-control" id="DataEnd2" value="{{ngDialogData.DateEnd}}">
+    </div>
+    <div class="form-group">
+        <label for="type">Status etapu</label>
+        <select id="type2" class="form-control" ng-model="item" ng-options="i.name for i in items track by i.value">">
+        </select>
+    </div>
+    <button type="submit" ng-click="editStage()" class="btn btn-success">Edytuj</button>
+</script>
+
+<body ng-app="NaviaApp">
+    <div class="container" ng-controller="StagesController">
+
+        <div class="row clearfix">
+
+            <div class="col-md-8 column">
+                <button type="button" class="btn btn-sm btn-success" ng-dialog="DialogAdd" ng-dialog-controller="StagesController" ng-dialog-class="ngdialog-theme-default">Dodaj nowy etap</button>
+                <form role="form" class="form-inline"></form>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                #
+                            </th>
+                            <th>
+                                Nazwa
+                            </th>
+                            <th>
+                                Data od
+                            </th>
+                            <th>
+                                Data do
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody ng-repeat="stage in stages track by $index">
+                        <tr>
+                            <td>{{$index+1}}</td>
+                            <td>
+                                <a href="" ng-click="editPopUp(stage.StageID)">{{stage.Name}}</a>
+</td>
+                            <td>{{stage.DateStart | date:'dd.MM.yyyy'}}</td>
+                            <td>{{stage.DateEnd | date:'dd.MM.yyyy'}}</td>
+                            <td><button type="button" class="btn btn-sm btn-danger" ng-click="passId(stage.StageID)" ng-dialog="DialogDelete" ng-dialog-controller="StagesController" ng-dialog-class="ngdialog-theme-default">
+    Usuń etap
+</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>

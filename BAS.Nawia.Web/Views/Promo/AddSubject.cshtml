@@ -1,0 +1,92 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script>
+    var myApp = angular.module('NaviaApp', []);
+    myApp.controller('SubjectController', function ($scope, $http) {
+        $scope.stages = [];
+        $scope.processing = false;
+        $http.get('/api/stage').success(function (data, status) {
+            $scope.stages = data;
+        });
+
+        $scope.createThesis = function () {
+            $scope.processing = true;
+            var scopes = [scope1.value, scope2.value, scope3.value, scope4.value, scope5.value];
+            $scope.createdsubject = JSON.stringify({ 'Title': subject.value, 'TitlePL': subject.value, 'Description': description.value, 'DescriptionPL': description.value, 'Tags': tags.value, 'TagsPL': tags.value, 'Scope': scopes, 'ScopePL': scopes });
+            $http.post('/api/thesispromo', $scope.createdsubject).success(function (data, status, headers, config) {
+            }).error(function (data, status, headers, config) {
+                alert('Cos poszło nie tak');
+            }).success(function (data, status) {
+                $scope.subjectid = data;
+                $scope.createdthesis = JSON.stringify({ 'SubjectID': $scope.subjectid, 'Type': type.value, 'Status': status.value, 'StageID': $scope.stages[0].StageID });
+                $http.post('/api/thesis', $scope.createdthesis).success(function (data, status, headers, config) {
+                    $scope.processing = false;
+                    alert("Dodano temat");
+                }).error(function (data, status, headers, config) {
+                    alert('Cos poszło nie tak');
+                })
+            });
+        }
+
+    });
+</script>
+
+<body ng-app="NaviaApp">
+    <div class="container" ng-controller="SubjectController">
+        <div class="row clearfix">
+            <div class="col-md-8 column">
+                <h1>
+                    Dodaj temat pracy dyplomowej
+                </h1>
+                <form role="form">
+                    <div class="form-group">
+                        <label for="subject">Temat</label><input class="form-control" id="subject">
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Typ pracy</label>
+                        <select id="type" class="form-control">
+                            <option value="0">Inżynierska</option>
+                            <option value="1">Magisterska</option>
+                            <option value="2">Doktorska</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Status pracy</label>
+                        <select id="status" class="form-control">
+                            <option value="0">Otwarta</option>
+                            <option value="3">Zamknięta</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Etap</label>
+                        <select ng-model="selectedItem" ng-options="stage.Name for stage in stages" id="stage" class="form-control">
+                            <option></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Opis</label>
+                        <textarea class="form-control" rows="5" id="description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="scope">Zakres</label>
+                        <input class="form-control" id="scope1" style="margin-bottom:10px">
+                        <input class="form-control" id="scope2" ng-show="count>=1" style="margin-bottom:10px">
+                        <input class="form-control" id="scope3" ng-show="count>=2" style="margin-bottom:10px">
+                        <input class="form-control" id="scope4" ng-show="count>=3" style="margin-bottom:10px">
+                        <input class="form-control" id="scope5" ng-show="count>=4" style="margin-bottom:10px">
+                        <button class="btn btn-success btn-xs" ng-click="count = count + 1" ng-hide="count==4">Dodaj nowy zakres</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="tags">Tagi <small>Słowa kluczowe oddzielone przecinkiem</small></label><input class="form-control" id="tags">
+                    </div>
+                    <button type="submit" ng-click="createThesis()" class="btn btn-success" ng-disabled="processing">Wyślij</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</body>
+
+

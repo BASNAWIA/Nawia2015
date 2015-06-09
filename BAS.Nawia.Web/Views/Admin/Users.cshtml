@@ -1,0 +1,76 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script>
+    var myApp = angular.module('NaviaApp', ['ngDialog']);
+    myApp.controller('ThesisController', function($scope, $http) {
+        $scope.theses = [];
+        $http.get('/api/thesis').success(function (data, status) {
+                $scope.theses = data;
+            });
+
+        $scope.clickToOpen = function () {
+            ngDialog.open({ template: 'DialogId' });
+        };
+
+    });
+</script>
+
+<script type="text/ng-template" id="DialogId">
+    <p><b>typ pracy:</b> magisterska</p>
+    <p><b>status:</b> zapisy otwarte</p>
+    <p><b>Temat:</b>Jakiś temat pracy</p>
+    <p><b>Promotor: </b>Jakiś mgr inż. promotor </p>
+    <p> <b>Opis: </b>jakis opis</p>
+    <p><b>Zakres: </b></p>
+    <p>Jakiś zakres</p>
+    <p>Jakiś zakres</p>
+    <p><b>Słowa kluczowe: </b>Jakieś, słowa, kluczowe</p>
+    <button type="submit" class="btn btn-success">Zapisz się</button>
+</script>
+
+<body ng-app="NaviaApp">
+    <div class="container" ng-controller="ThesisController">
+
+        <div class="row clearfix">
+
+            <div class="col-md-8 column">
+                <form role="form" class="form-inline"></form>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                #
+                            </th>
+                            <th>
+                                Tytuł
+                            </th>
+                            <th>
+                                Promotor
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody ng-repeat="thesis in theses track by $index">
+                        <tr ng-if="thesis.Student == null">
+                            <td>{{$index+1}}</td>
+                            <td><a href="" ng-dialog="DialogId" ng-dialog-class="ngdialog-theme-default" 
+                                   ng-dialog-controller="ThesisController">{{thesis.Subject.TitlePL}}</a></td>
+                            <td>{{thesis.Supervisor.Title + ' ' + thesis.Supervisor.Name + ' ' + thesis.Supervisor.LastName}}</td>
+                            @*<td><button type="button" class="btn btn-sm btn-success" ng-dialog="DialogId" ng-dialog-controller="ThesisController"
+                                        ng-dialog-class="ngdialog-theme-default">Szczegóły</button></td>*@
+                        </tr>
+                        <tr ng-if="thesis.Student != null" class="active">
+                            <td>{{$index+1}}</td>
+                            <td>
+                                <a href="" ng-dialog="DialogId" ng-dialog-class="ngdialog-theme-default"
+                                   ng-dialog-controller="ThesisController">{{thesis.Subject.TitlePL}}</a>
+                            </td>
+                            <td>{{thesis.Supervisor.Title + ' ' + thesis.Supervisor.Name + ' ' + thesis.Supervisor.LastName}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>

@@ -1,0 +1,95 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<script>
+    var myApp = angular.module('NaviaApp', ['ngDialog']);
+    myApp.controller('ThesisController', function ($scope, $http, $rootScope, ngDialog) {
+        $scope.theses = [];
+        $http.get('/api/thesis/@Microsoft.AspNet.Identity.IdentityExtensions.GetUserId(HttpContext.Current.User.Identity).ToString()').success(function (data, status) {
+            $scope.theses = data;
+        });
+        $scope.PopUp = function (thesisid) {
+            $scope.currentid = thesisid;
+            $http.get('/api/thesis/' + $scope.currentid).success(function (data, status) {
+                $scope.singlethesis = data;
+                $scope.types = [{ name: 'Inżynierska', value: 0 }, { name: 'Magisterska', value: 1 }, { name: 'Doktorska', value: 2 }];
+                if (data.Type == 0) {
+                    $scope.type = $scope.types[0].name;
+                }
+                else if (data.Type == 1) {
+                    $scope.type = $scope.types[1].name;
+                }
+                else if (data.Type == 2) {
+                    $scope.type = $scope.types[2].name;
+                }
+                $rootScope.statuses = [{ name: 'Otwarty', value: 0 }, { name: 'Archiwalny', value: 1 }, { name: 'Przypisany', value: 2 }, { name: 'Zablokowany', value: 3 }];
+                if (data.Status == 0) {
+                    $scope.status = $scope.statuses[0].name;
+                }
+                else if (data.Status == 1) {
+                    $scope.status = $scope.statuses[1].name;
+                }
+                else if (data.Status == 2) {
+                    $scope.status = $scope.statuses[2].name;
+                }
+                else if (data.Status == 3) {
+                    $scope.status = $scope.statuses[3].name;
+                }
+                ngDialog.open({
+                    template: 'DialogId',
+                    controller: 'ThesisController',
+                    className: 'ngdialog-theme-default',
+                    data: $scope,
+                    scope: $scope
+                });
+            });
+
+        }
+    });
+</script>
+
+<script type="text/ng-template" id="DialogId">
+    <p><b>Typ pracy: </b><a style='color: black'>{{ngDialogData.type}}</a></p>
+    <p><b>Status: </b><a style='color: black'>{{ngDialogData.status}}</a></p>
+    <p><b>Temat: </b>{{ngDialogData.singlethesis.Subject.Title}}</p>
+    <p><b>Promotor: </b>{{ngDialogData.singlethesis.Supervisor.Title}} {{ngDialogData.singlethesis.Supervisor.Name}} {{ngDialogData.singlethesis.Supervisor.LastName}}</p>
+    <p> <b>Opis: </b>{{ngDialogData.singlethesis.Subject.Description}}</p>
+    <p><b>Słowa kluczowe: </b>{{ngDialogData.singlethesis.Subject.Tags}}</p>
+</script>
+
+<body ng-app="NaviaApp">
+    <div class="container" ng-controller="ThesisController">
+
+        <div class="row clearfix">
+
+            <div class="col-md-8 column">
+                <form role="form" class="form-inline"></form>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                #
+                            </th>
+                            <th>
+                                Tytuł
+                            </th>
+                            <th>
+                                Promotor
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody ng-repeat="thesis in theses track by $index">
+                        <tr class="success">
+                            <td>{{$index+1}}</td>
+                            <td>                                <a href="" ng-click="PopUp(thesis.ThesisId)">{{thesis.Subject.TitlePL}}</a>
+</td>
+                            <td>{{thesis.Supervisor.Title + ' ' + thesis.Supervisor.Name + ' ' + thesis.Supervisor.LastName}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>

@@ -1,0 +1,102 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script type="text/ng-template" id="DialogId">
+    <p><b>Temat:</b>Jakiś temat pracy</p>
+    <p> <b>Opis: </b>jakis opis</p>
+    <p><b>Zakres: </b></p>
+    <p>Jakiś zakres</p>
+    <p>Jakiś zakres</p>
+    <p><b>Słowa kluczowe: </b>Jakieś, słowa, kluczowe</p>
+    <button type="submit" class="btn btn-success">Zapisz się</button>
+</script>
+
+<script>
+    var myApp = angular.module('NaviaApp', ['ngDialog']);
+    myApp.controller('SubjectController', function ($scope, $http, $rootScope, ngDialog) {
+        $scope.subjects = [];
+        $http.get('/api/studentsubject/1').success(function (data, status) {
+            $scope.subjects = data;
+        });
+
+        $scope.editPopUp = function (thesisid) {
+            $rootScope.currentid = thesisid;
+            $http.get('/api/subject/' + $rootScope.currentid).success(function (data, status) {
+                $rootScope.singlethesis = data;
+                ngDialog.open({
+                    template: 'DialogEdit',
+                    controller: 'SubjectController',
+                    className: 'ngdialog-theme-default',
+                    data: $rootScope.singlethesis
+                });
+            });
+        }
+
+        $scope.Accept = function () {
+            $scope.updatedsubject = JSON.stringify({ 'Status': 0, 'SubjectId': $rootScope.currentid});
+            $http.put('/api/subject', $scope.updatedsubject).success(function (data, status, headers, config) {
+            }).error(function (data, status, headers, config) {
+                alert('Cos poszło nie tak');
+            }).success(function (data, status) {
+                window.location.reload();
+            });
+        }
+
+        $scope.Reject = function () {
+            $http.delete('/api/subject/' + $rootScope.currentid).success(function (data, status, headers, config) {
+            }).error(function (data, status, headers, config) {
+                alert('Cos poszło nie tak');
+            }).success(function (data, status) {
+                window.location.reload();
+            });
+        }
+
+    });
+</script>
+
+<script type="text/ng-template" id="DialogEdit">
+    <p><b>Temat:</b><input class="form-control" id="Name2" value="{{ngDialogData.Title}}"></p>
+    <p> <b>Opis: </b><input class="form-control" id="Name2" value="{{ngDialogData.Description}}"></p>
+    <p><b>Słowa kluczowe: </b><input class="form-control" id="Name2" value="{{ngDialogData.Tags}}"></p>
+    <button type="submit" ng-click="Accept()" class="btn btn-success">Akceptuj</button>
+    <button type="submit" ng-click="Reject()" class="btn btn-danger">Odrzuć</button>
+</script>
+
+<body ng-app="NaviaApp">
+    <div class="container" ng-controller="SubjectController">
+
+        <div class="row clearfix">
+
+            <div class="col-md-8 column">
+                <form role="form" class="form-inline"></form>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                #
+                            </th>
+                            <th>
+                                Tytuł
+                            </th>
+                            <th>
+                                Opis
+                            </th>
+                            <th>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody ng-repeat="subject in subjects track by $index">
+                        <tr>
+                            <td>{{$index+1}}</td>
+                            <td>
+                                <a href="" ng-click="editPopUp(subject.SubjectId)">{{subject.TitlePL}}</a>
+                            </td>
+                            <td>{{subject.DescriptionPL}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>

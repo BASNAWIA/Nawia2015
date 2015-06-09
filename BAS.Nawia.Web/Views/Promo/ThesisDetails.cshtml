@@ -1,0 +1,72 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+    <body>
+        <div class="container">
+            <div class="row clearfix">
+                <div class="col-md-4 column">
+                </div>
+                <div class="col-md-8 column">
+                    
+                        <h1>
+                            Szczegóły pracy dyplomowej
+                        </h1>
+                    <div class="row clearfix">
+                        <div class="col-md-8 column">
+                            <form role="form">
+                                <div class="form-group">
+                                    <label for="subject">Temat</label><input class="form-control" id="subject">
+                                </div>
+                                <div class="form-group">
+                                    <label for="subject">Typ pracy</label>
+                                    <select class="form-control">
+                                        <option value="one">licencjacka</option>
+                                        <option value="two">Two</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="subject">Status pracy</label>
+                                    <select class="form-control">
+                                        <option value="one">One</option>
+                                        <option value="two">Two</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="subject">Etap pracy</label>
+                                    <select class="form-control">
+                                        <option value="one">One</option>
+                                        <option value="two">Two</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="description">Opis</label>
+                                    <textarea class="form-control" rows="5" id="description"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="scope">Zakres</label>
+                                    <textarea class="form-control" rows="5" id="scope"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="subject">Tagi <small>Słowa kluczowe oddzielone przecinkiem</small></label><input class="form-control" id="tematPracy">
+                                </div>
+                                <button type="submit" class="btn btn-success">Zapisz</button>
+                                <button type="submit" class="btn btn-success">Generuj kartę dyplomową</button>
+                            </form>
+                        </div>
+                        <div class="col-md-4 column">
+                            <h3>
+                                Studenci, którzy zapisali się na ten temat
+                            </h3>
+                            <ul>
+                                <li>Jakis jeden</li>
+                                <li>Jakiś drugi</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </body>
+
